@@ -1,0 +1,10 @@
+[[target]]
+name = "starfield"
+assets = []
+
+[target.metadata]
+name = "Starfield"
+author = "Giorgio Pomettini"
+bundle_id = "com.pomettini.starfield"
+version = "0.1"
+image_path = "assets/launcher"
