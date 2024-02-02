@@ -18,6 +18,9 @@ use rand::SeedableRng;
 // Starfield struct is 9632 bytes, Playdate's stack size is 61800 bytes
 const STARS: usize = 600;
 
+const WIDTH: f32 = LCD_COLUMNS as f32;
+const HEIGHT: f32 = LCD_ROWS as f32;
+
 #[inline(always)]
 const fn map(value: f32, start1: f32, stop1: f32, start2: f32, stop2: f32) -> f32 {
     start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1))
@@ -25,7 +28,18 @@ const fn map(value: f32, start1: f32, stop1: f32, start2: f32, stop2: f32) -> f3
 
 #[inline(always)]
 const fn random(value: u32, min: f32, max: f32) -> f32 {
-    ((value as f32 / 100.0) % (max - min)) + min
+    let fvalue = value as f32 / 100000.0;
+    fvalue % (max - min) + min
+}
+
+#[inline(always)]
+const fn black() -> LCDColor {
+    LCDColor::Solid(LCDSolidColor::kColorBlack)
+}
+
+#[inline(always)]
+const fn white() -> LCDColor {
+    LCDColor::Solid(LCDSolidColor::kColorWhite)
 }
 
 #[derive(Default, Copy, Clone)]
@@ -39,10 +53,10 @@ struct Star {
 impl Star {
     #[inline(always)]
     fn new(rng: &mut SmallRng) -> Self {
-        let z = random(rng.next_u32(), 0.0, LCD_COLUMNS as f32);
+        let z = random(rng.next_u32(), 0.0, WIDTH);
         Self {
-            x: random(rng.next_u32(), -(LCD_COLUMNS as f32), LCD_COLUMNS as f32),
-            y: random(rng.next_u32(), -(LCD_ROWS as f32), LCD_ROWS as f32),
+            x: random(rng.next_u32(), -WIDTH, WIDTH),
+            y: random(rng.next_u32(), -HEIGHT, HEIGHT),
             z,
             pz: z,
         }
@@ -53,8 +67,8 @@ impl Star {
         self.z -= speed;
         if self.z < 1.0 {
             self.z = LCD_COLUMNS as f32;
-            self.x = random(rng.next_u32(), -(LCD_COLUMNS as f32), LCD_COLUMNS as f32);
-            self.y = random(rng.next_u32(), -(LCD_ROWS as f32), LCD_ROWS as f32);
+            self.x = random(rng.next_u32(), -WIDTH, WIDTH);
+            self.y = random(rng.next_u32(), -HEIGHT, HEIGHT);
             self.pz = self.z;
         }
         Ok(())
@@ -62,13 +76,13 @@ impl Star {
 
     #[inline(always)]
     fn show(&mut self) -> Result<(), Error> {
-        let sx = map((self.x / self.z) + 0.5, 0.0, 1.0, 0.0, LCD_COLUMNS as f32);
-        let sy = map((self.y / self.z) + 0.5, 0.0, 1.0, 0.0, LCD_ROWS as f32);
+        let sx = map((self.x / self.z) + 0.5, 0.0, 1.0, 0.0, WIDTH);
+        let sy = map((self.y / self.z) + 0.5, 0.0, 1.0, 0.0, HEIGHT);
 
-        let r = map(self.z, 0.0, LCD_COLUMNS as f32, 4.0, 0.0);
+        let r = map(self.z, 0.0, WIDTH, 4.0, 0.0);
 
-        let px = map((self.x / self.pz) + 0.5, 0.0, 1.0, 0.0, LCD_COLUMNS as f32);
-        let py = map((self.y / self.pz) + 0.5, 0.0, 1.0, 0.0, LCD_ROWS as f32);
+        let px = map((self.x / self.pz) + 0.5, 0.0, 1.0, 0.0, WIDTH);
+        let py = map((self.y / self.pz) + 0.5, 0.0, 1.0, 0.0, HEIGHT);
 
         self.pz = self.z;
 
@@ -76,7 +90,7 @@ impl Star {
             Point2D::new(px as i32, py as i32),
             Point2D::new(sx as i32, sy as i32),
             r as i32,
-            LCDColor::Solid(LCDSolidColor::kColorWhite),
+            white(),
         )?;
         Ok(())
     }
@@ -102,7 +116,7 @@ impl Starfield {
 
 impl Game for Starfield {
     fn update(&mut self, _playdate: &mut Playdate) -> Result<(), Error> {
-        Graphics::get().clear(LCDColor::Solid(LCDSolidColor::kColorBlack))?;
+        Graphics::get().clear(black())?;
         let crank_change = System::get().get_crank_change()?;
         for star in &mut self.stars {
             star.update(&mut self.rng, crank_change.max(0.0))?;
