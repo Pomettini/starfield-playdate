@@ -28,7 +28,7 @@ const fn map(value: f32, start1: f32, stop1: f32, start2: f32, stop2: f32) -> f3
 
 #[inline(always)]
 const fn random(value: u32, min: f32, max: f32) -> f32 {
-    let fvalue = value as f32 / 100000.0;
+    let fvalue = value as f32 / 1000.0;
     fvalue % (max - min) + min
 }
 

@@ -1,5 +1,7 @@
 # Starfield\*
 
+![Game preview](preview.gif)
+
 Basically a port of the [Daniel Shiffman's Starfield p5.js sketch](https://thecodingtrain.com/challenges/1-starfield) for the [Playdate](https://play.date/)
 
 Just turn the crank forward to accelerate. Have fun!
