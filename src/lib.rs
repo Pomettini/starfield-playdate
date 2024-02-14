@@ -4,6 +4,7 @@
 extern crate alloc;
 
 use alloc::boxed::Box;
+use alloc::vec::Vec;
 use anyhow::Error;
 use crankstart::display::Display;
 use crankstart::graphics::*;
@@ -14,9 +15,10 @@ use rand::rngs::SmallRng;
 use rand::RngCore;
 use rand::SeedableRng;
 
-// Any value above ~600 will cause stack overflow
+// Update: Problem solved by using vecs
+// Any value above ~600 will cause stack overflow (if you're using arrays instead of vecs)
 // Starfield struct is 9632 bytes, Playdate's stack size is 61800 bytes
-const STARS: usize = 600;
+const STARS: usize = 10000;
 
 const WIDTH: f32 = LCD_COLUMNS as f32;
 const HEIGHT: f32 = LCD_ROWS as f32;
@@ -98,7 +100,7 @@ impl Star {
 
 struct Starfield {
     rng: SmallRng,
-    stars: [Star; STARS],
+    stars: Vec<Star>,
 }
 
 impl Starfield {
@@ -106,9 +108,9 @@ impl Starfield {
         Display::get().set_refresh_rate(50.0)?;
         let (_, time) = System::get().get_seconds_since_epoch()?;
         let mut rng = SmallRng::seed_from_u64(time as u64);
-        let mut stars: [Star; STARS] = [Star::default(); STARS];
-        for star in stars.iter_mut().take(STARS) {
-            *star = Star::new(&mut rng);
+        let mut stars: Vec<Star> = Vec::new();
+        for _ in 0..STARS {
+            stars.push(Star::new(&mut rng));
         }
         Ok(Box::new(Self { rng, stars }))
     }
